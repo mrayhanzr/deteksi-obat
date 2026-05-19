@@ -1,159 +1,61 @@
 from flask import Flask, render_template, request
 from inference_sdk import InferenceHTTPClient
-from PIL import Image, ImageDraw
+import cv2
 import os
-import uuid
 
 app = Flask(__name__)
 
-# ============================================
-# CONFIG
-# ============================================
-
-UPLOAD_FOLDER = "static/uploads"
-RESULT_FOLDER = "static/results"
-
-os.makedirs(UPLOAD_FOLDER, exist_ok=True)
-os.makedirs(RESULT_FOLDER, exist_ok=True)
-
-app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
-app.config["RESULT_FOLDER"] = RESULT_FOLDER
-
-# ============================================
-# ROBOFLOW CLIENT
-# ============================================
-
+# Konfigurasi Client - Langsung masukkan API Key agar tidak ada lagi masalah env
+# Catatan: Di Railway, pastikan Anda juga tetap mengisi Variables agar aman
 client = InferenceHTTPClient(
     api_url="https://serverless.roboflow.com",
-    api_key=os.getenv("ORrp8hMD5MsuLnNhQ5ew")
+    api_key=os.environ.get("ROBOFLOW_API_KEY", "ORrp8hMD5MsuLnNhQ5ew")
 )
-
-# ============================================
-# HOME
-# ============================================
 
 @app.route("/")
 def home():
     return render_template("index.html")
 
-# ============================================
-# DETECT
-# ============================================
-
 @app.route("/detect", methods=["POST"])
 def detect():
-
-    if "image" not in request.files:
-        return "No image uploaded"
-
     file = request.files["image"]
+    image_path = "/tmp/test.jpg"
+    file.save(image_path)
+    frame = cv2.imread(image_path)
 
-    if file.filename == "":
-        return "Empty filename"
-
-    # simpan file upload
-    filename = str(uuid.uuid4()) + ".jpg"
-
-    upload_path = os.path.join(
-        app.config["UPLOAD_FOLDER"],
-        filename
-    )
-
-    file.save(upload_path)
-
-    # ============================================
-    # RUN ROBOFLOW
-    # ============================================
+    print(f"DEBUG: Workspace={ 'rafflys-workspace' }, WorkflowID={ 'detect-count-and-visualize' }")
 
     result = client.run_workflow(
         workspace_name="rafflys-workspace",
-        workflow_id="detect-count-and-visualize-2",
-        images={
-            "image": upload_path
-        },
+        workflow_id="detect-count-and-visualize", 
+        images={"image": image_path},
         use_cache=True
     )
 
-    # ============================================
-    # AMBIL PREDICTIONS
-    # ============================================
-
     predictions = result[0]["predictions"]["predictions"]
 
-    # ============================================
-    # DRAW BOUNDING BOX
-    # ============================================
+    # --- TAMBAHKAN INI (INISIALISASI VARIABEL) ---
+    count_nature = 0
+    count_neurobion = 0
+    # --------------------------------------------
 
-    image = Image.open(upload_path)
-    draw = ImageDraw.Draw(image)
+    for obj in predictions:
+        class_name = obj["class"]
+        # ... (kode loop Anda) ...
+        if class_name == "NATUR-E":
+            count_nature += 1
+            # ...
+        else:
+            count_neurobion += 1
+            # ...
 
-    class_counts = {}
-
-    for pred in predictions:
-
-        x = pred["x"]
-        y = pred["y"]
-        w = pred["width"]
-        h = pred["height"]
-
-        label = pred["class"]
-        confidence = pred["confidence"]
-
-        # hitung total kelas
-        if label not in class_counts:
-            class_counts[label] = 0
-
-        class_counts[label] += 1
-
-        # koordinat bbox
-        x1 = x - w / 2
-        y1 = y - h / 2
-        x2 = x + w / 2
-        y2 = y + h / 2
-
-        # gambar kotak
-        draw.rectangle(
-            [x1, y1, x2, y2],
-            outline="red",
-            width=4
-        )
-
-        # teks
-        draw.text(
-            (x1, y1 - 20),
-            f"{label} {confidence:.2f}",
-            fill="red"
-        )
-
-    # simpan hasil
-    result_filename = "result_" + filename
-
-    result_path = os.path.join(
-        app.config["RESULT_FOLDER"],
-        result_filename
-    )
-
-    image.save(result_path)
-
-    # ============================================
-    # RETURN HTML
-    # ============================================
+    # --- SEKARANG VARIABEL SUDAH ADA SAAT DI-RENDER ---
+    hasil_path = "static/hasil.jpg"
+    cv2.imwrite(hasil_path, frame)
 
     return render_template(
-        "result.html",
-        image_path=result_path,
-        class_counts=class_counts
+        "index.html", 
+        image=hasil_path, 
+        natur=count_nature,    # Sekarang ini akan terbaca
+        neurobion=count_neurobion # Sekarang ini akan terbaca
     )
-
-# ============================================
-# MAIN
-# ============================================
-
-if __name__ != '__main__':
-    # Jika dijalankan oleh Gunicorn, ini akan diabaikan
-    pass
-else:
-    # Jika seseorang tidak sengaja menjalankan 'python app.py',
-    # kita paksa dia untuk menggunakan host dan port yang benar
-    port = int(os.environ.get("PORT", 5000))
-    app.run(host="0.0.0.0", port=port)
