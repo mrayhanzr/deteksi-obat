@@ -36,6 +36,9 @@ def detect():
     for obj in predictions:
         class_name = obj["class"]
         conf = obj["confidence"]
+        
+        print(f"DEBUG: Deteksi {class_name} dengan confidence {conf:.2f}")
+        
         if conf < 0.85: continue
         
         x, y, w, h = int(obj["x"]), int(obj["y"]), int(obj["width"]), int(obj["height"])
