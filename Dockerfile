@@ -7,7 +7,7 @@ RUN apt-get update && apt-get install -y \
 
 WORKDIR /app
 COPY deps.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+RUN pip install --no-cache-dir -r deps.txt
 COPY . .
 
 # BARIS INI ADALAH KUNCI UTAMA:
