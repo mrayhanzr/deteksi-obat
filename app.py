@@ -42,7 +42,7 @@ def detect():
 
         # KEMBALIKAN KE SETTINGAN AWAL LOKALHOST
         # (Jika sebelumnya 0.85, silakan turunkan ke 0.5 kalau Natur-E sering hilang)
-        if conf < 0.85: continue
+        if conf < 0.65: continue
 
         x = int(obj["x"])
         y = int(obj["y"])
@@ -50,7 +50,7 @@ def detect():
         h = int(obj["height"])
         area = w * h
 
-        if area > 40000: continue
+        if area > 60000: continue
 
         if class_name == "NATUR-E":
             count_nature += 1
