@@ -15,7 +15,13 @@ client = InferenceHTTPClient(
 
 @app.route("/")
 def home():
-    return render_template("index.html")
+    # Ubah bagian return di app.py menjadi ini:
+    return render_template(
+        "index.html", 
+        image=f"data:image/jpeg;base64,{encoded_string}", # Kirim sebagai variabel 'image'
+        natur=count_nature, 
+        neurobion=count_neurobion
+    )
 
 @app.route("/detect", methods=["POST"])
 def detect():
