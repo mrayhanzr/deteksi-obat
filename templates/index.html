@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Deteksi Obat Berbasis AI</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="bg-orb orb-1"></div>
+    <div class="bg-orb orb-2"></div>
+    <div class="bg-orb orb-3"></div>
+
+    <div id="loadingOverlay" class="loading-overlay">
+        <div class="spinner"></div>
+        <h3>Sedang mendeteksi objek...</h3>
+        <p>Mohon tunggu sebentar, sistem sedang memproses gambar.</p>
+    </div>
+
+    <main class="app-shell">
+        <section class="hero-card">
+            <div class="hero-top">
+                <div class="hero-badge">RF-DETR • Object Detection</div>
+                <div class="hero-chip">Counting System</div>
+            </div>
+
+            <h1>Deteksi dan Penghitungan Obat</h1>
+            <p>
+                Upload gambar dari penyimpanan atau ambil foto dari kamera, lalu sistem akan mendeteksi
+                dan menghitung <strong>NATUR-E</strong> serta <strong>NEUROBION</strong>.
+            </p>
+
+            <div class="stats-row">
+                <div class="stat-pill stat-green">NATUR-E</div>
+                <div class="stat-pill stat-red">NEUROBION</div>
+                <div class="stat-pill stat-dark">Bounding Box Detection</div>
+                <div class="stat-pill stat-blue">Preview Gambar</div>
+            </div>
+        </section>
+
+        <section class="content-grid">
+            <div class="panel">
+                <div class="panel-header">
+                    <h2>Input Gambar</h2>
+                    <span>Upload atau kamera</span>
+                </div>
+
+                <form id="detectForm" action="/detect" method="POST" enctype="multipart/form-data" class="upload-form">
+                    <div class="upload-area">
+                        <label class="upload-box" for="image">
+                            <div class="upload-icon">⬆</div>
+                            <div class="upload-text">
+                                <strong>Pilih gambar</strong>
+                                <span>Klik untuk upload dari penyimpanan atau gunakan kamera</span>
+                            </div>
+                        </label>
+
+                        <input
+                            id="image"
+                            type="file"
+                            name="image"
+                            accept="image/*"
+                            capture="environment"
+                            required
+                        >
+
+                        <div class="upload-actions">
+                            <button type="button" id="clearPreviewBtn" class="btn btn-secondary">Hapus Preview</button>
+                            <button type="submit" class="btn btn-primary">Deteksi Obat</button>
+                        </div>
+                    </div>
+                </form>
+
+                <div class="preview-section">
+                    <div class="panel-subheader">
+                        <h3>Preview Gambar</h3>
+                        <span>Sebelum proses deteksi</span>
+                    </div>
+
+                    <div class="preview-card">
+                        <img id="previewImage" src="" alt="Preview gambar" class="preview-img hidden">
+                        <div id="previewPlaceholder" class="empty-preview">
+                            <div class="empty-icon">🖼</div>
+                            <p>Gambar yang dipilih akan tampil di sini</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="note-box">
+                    <h3>Catatan</h3>
+                    <p>
+                        Model ini dilatih untuk dua kelas: NATUR-E dan NEUROBION.
+                        Objek di luar kelas tersebut masih bisa terdeteksi keliru.
+                    </p>
+                </div>
+            </div>
+
+            <div class="panel result-panel">
+                <div class="panel-header">
+                    <h2>Hasil Deteksi</h2>
+                    <span>Output sistem</span>
+                </div>
+
+                {% if image %}
+                <div class="result-summary">
+                    <div class="count-card green">
+                        <span class="count-label">NATUR-E</span>
+                        <span class="count-value">{{ natur }}</span>
+                    </div>
+
+                    <div class="count-card red">
+                        <span class="count-label">NEUROBION</span>
+                        <span class="count-value">{{ neurobion }}</span>
+                    </div>
+
+                    <div class="count-card blue full">
+                        <span class="count-label">Total Objek</span>
+                        <span class="count-value">{{ natur + neurobion }}</span>
+                    </div>
+                </div>
+
+                <div class="image-card">
+                    <img src="{{ image }}" alt="Hasil Deteksi Obat">
+                </div>
+                {% else %}
+                <div class="empty-state">
+                    <div class="empty-icon">🧠</div>
+                    <h3>Belum ada hasil</h3>
+                    <p>Upload gambar lalu klik tombol deteksi untuk melihat bounding box dan jumlah objek.</p>
+                </div>
+                {% endif %}
+            </div>
+        </section>
+    </main>
+
+    <script>
+        const input = document.getElementById('image');
+        const previewImage = document.getElementById('previewImage');
+        const previewPlaceholder = document.getElementById('previewPlaceholder');
+        const clearBtn = document.getElementById('clearPreviewBtn');
+        const form = document.getElementById('detectForm');
+        const loadingOverlay = document.getElementById('loadingOverlay');
+
+        input.addEventListener('change', function () {
+            const file = this.files && this.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                previewImage.src = e.target.result;
+                previewImage.classList.remove('hidden');
+                previewPlaceholder.classList.add('hidden');
+            };
+            reader.readAsDataURL(file);
+        });
+
+        clearBtn.addEventListener('click', function () {
+            input.value = '';
+            previewImage.src = '';
+            previewImage.classList.add('hidden');
+            previewPlaceholder.classList.remove('hidden');
+        });
+
+        form.addEventListener('submit', function () {
+            loadingOverlay.classList.add('show');
+        });
+    </script>
+</body>
+</html>
