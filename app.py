@@ -149,8 +149,11 @@ def detect():
 # MAIN
 # ============================================
 
-if __name__ == '__main__':
-    # Railway menetapkan port di sini, atau default ke 5000
+if __name__ != '__main__':
+    # Jika dijalankan oleh Gunicorn, ini akan diabaikan
+    pass
+else:
+    # Jika seseorang tidak sengaja menjalankan 'python app.py',
+    # kita paksa dia untuk menggunakan host dan port yang benar
     port = int(os.environ.get("PORT", 5000))
-    # Sangat penting: gunakan host 0.0.0.0
     app.run(host="0.0.0.0", port=port)

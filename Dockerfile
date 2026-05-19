@@ -13,4 +13,4 @@ COPY . .
 # BARIS INI ADALAH KUNCI UTAMA:
 # Kita paksa jalankan gunicorn langsung di sini.
 # $PORT adalah variabel dari Railway, gunicorn akan otomatis membacanya.
-CMD gunicorn app:app --bind 0.0.0.0:$PORT --timeout 120
+CMD ["gunicorn", "app:app", "--bind", "0.0.0.0:8080", "--timeout", "120"]
