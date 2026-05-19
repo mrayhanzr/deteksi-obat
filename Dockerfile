@@ -17,5 +17,4 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy sisa file proyek
 COPY . .
 
-# Jalankan aplikasi (sesuaikan dengan command di Procfile Anda)
-CMD ["python", "app.py"]
+EXPOSE 5000
